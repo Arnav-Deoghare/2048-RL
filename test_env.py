@@ -22,3 +22,18 @@ print(next_state)
 
 print("Reward:", reward)
 print("Done:", done)
+state = env.reset()
+print("State:", env.reset())
+print("Actual grid:\n", env.grid)
+print(state)
+print(state.shape)
+print("_________________________")
+
+
+
+
+env = Environment()
+
+print(env.actions)
+state = env.reset()
+print(state.shape)
