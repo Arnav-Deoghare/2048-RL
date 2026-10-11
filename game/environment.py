@@ -1,5 +1,5 @@
 import numpy as np
-from logic import initialise_grid, move, spawn_tile, is_game_over
+from .logic import initialise_grid, move, spawn_tile, is_game_over
 
 class Environment:
     actions = ["w", "a", "s", "d"]

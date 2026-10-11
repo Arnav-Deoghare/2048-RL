@@ -1,5 +1,5 @@
 from agents.agent import RandomAgent
-from RL_env import Environment
+from game.environment import Environment
 
 env = Environment()
 agent = RandomAgent(env.actions)

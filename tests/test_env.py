@@ -1,4 +1,4 @@
-from RL_env import Environment
+from .game.environment import Environment
 import numpy as np
 
 env = Environment()
