@@ -2,7 +2,7 @@ import numpy as np
 
 board_size = 4
 
-np.random.seed(0)  # Optional: for reproducibility
+# np.random.seed(0)  # Optional: for reproducibility
 
 
 def initialise_grid():
@@ -27,7 +27,8 @@ def spawn_tile(grid):
         return
 
     new_pos = empty_pos[np.random.choice(empty_pos.shape[0])]
-    grid[new_pos[0], new_pos[1]] = 2
+    k = np.random.choice([2, 4], p=[0.9, 0.1])
+    grid[new_pos[0], new_pos[1]] = k
 
 def process_line(line, direction):
     modified_line = line[line != 0]
