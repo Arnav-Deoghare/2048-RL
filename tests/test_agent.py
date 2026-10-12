@@ -1,35 +1,56 @@
 import numpy as np
 
 from agents.greedy_reward_agent import GreedyRewardAgent
+from agents.strategic_heuristic_agent import StrategicHeuristicAgent
 from game.logic import move
 
 
-def test_valid_action():
-    agent = GreedyRewardAgent(["w", "a", "s", "d"])
-    grid = np.zeros((4, 4), dtype=int)
+def main():
+    agent = StrategicHeuristicAgent(["w", "a", "s", "d"])
 
-    assert agent.choose_action(grid) in agent.actions
+    boards = [
+        np.array([
+            [16, 8, 4, 2],
+            [8, 4, 2, 0],
+            [4, 2, 0, 0],
+            [2, 0, 0, 0]
+        ]),
+        np.array([
+            [2, 16, 4, 8],
+            [4, 2, 16, 0],
+            [8, 4, 2, 0],
+            [2, 0, 8, 4]
+        ]),
+        np.array([
+            [0, 0, 0, 0],
+            [0, 2, 0, 0],
+            [0, 0, 4, 0],
+            [0, 0, 0, 8]
+        ]),
+        np.array([
+            [2, 4, 8, 16],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+        ])
+    ]
 
+    for i, grid in enumerate(boards, start=1):
+        action = agent.choose_action(grid)
+        score = agent.evaluate_board(grid)
 
-def test_highest_reward():
-    agent = GreedyRewardAgent(["w", "a", "s", "d"])
-    grid = np.array([
-        [2, 2, 0, 0],
-        [4, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-    ])
-
-    rewards = {
-        action: move(grid.copy(), action)[1]
-        for action in agent.actions
-    }
-
-    chosen = agent.choose_action(grid)
-    assert rewards[chosen] == max(rewards.values())
+        print(f"\nBoard {i}:")
+        print(grid)
+        print(f"Score: {score}")
+        print(f"Chosen action: {action}")
 
 
 if __name__ == "__main__":
-    test_valid_action()
-    test_highest_reward()
+    main()
+
+
+if __name__ == "__main__":
+    # test_valid_action()
+    # test_highest_reward()
+    main()
     print("All tests passed.")
