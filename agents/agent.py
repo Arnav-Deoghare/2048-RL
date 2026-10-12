@@ -1,8 +1,10 @@
 import random
 
 class RandomAgent:
-    def __init__(self,actions):
+    def __init__(self, actions, seed=None):
+
         self.actions = actions
-        
-    def choose_action(self):
-        return random.choice(self.actions)
+        self.rng = random.Random(seed)
+
+    def choose_action(self,state):
+        return self.rng.choice(self.actions)

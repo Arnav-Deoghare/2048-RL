@@ -1,28 +1,25 @@
 import csv
-import random
 from pathlib import Path
 from statistics import mean
 
 import numpy as np
 
-from agents.agent import RandomAgent
+from agents.Random_agent import RandomAgent
+from agents.greedy_reward_agent import GreedyRewardAgent
 from game.environment import Environment
 
 
-# Reproducibility for the current implementation:
-# Python random controls RandomAgent's action choices.
-# NumPy random controls initial boards and tile spawning.
 SEED = 42
-random.seed(SEED)
-np.random.seed(SEED)
 
 N_EPISODES = 1000
 RESULTS_FILE = Path("results") / "random_agent_results.csv"
 RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+TILE_MILESTONES = (64, 128, 256, 512)
+
 
 def main():
-    env = Environment()
+    env = Environment(seed=SEED)
     agent = RandomAgent(env.actions)
     episode_results = []
 
@@ -31,37 +28,56 @@ def main():
         done = False
         total_reward = 0
         n_moves = 0
-        moves_to_2048 = None
+        ineffective_moves = 0
+        moves_to_tile = {tile: None for tile in (*TILE_MILESTONES, 2048)}
 
         while not done:
-            action = agent.choose_action()
+            if n_moves >= 10000:
+                print(f"Episode {episode} exceeded 10000 moves")
+                break
+            before = env.grid.copy()
+
+            action = agent.choose_action(env.grid)
             _, reward, done = env.step(action)
 
+            if np.array_equal(before, env.grid):
+                ineffective_moves += 1
             total_reward += reward
             n_moves += 1
+            current_max_tile = int(env.grid.max())
 
-            # Record the first move on which the 2048 tile is reached.
-            if moves_to_2048 is None and int(env.grid.max()) >= 2048:
-                moves_to_2048 = n_moves
-
-        episode_results.append({
+            # Record the first move on which each milestone is reached.
+            for tile in moves_to_tile:
+                if moves_to_tile[tile] is None and current_max_tile >= tile:
+                    moves_to_tile[tile] = n_moves
+        print(f"Finished episode {episode}: {n_moves} moves")
+        row = {
             "episode": episode,
             "total_reward": int(total_reward),
             "moves": int(n_moves),
+            "ineffective_moves": int(ineffective_moves),
             "max_tile": int(env.grid.max()),
-            "reached_2048": moves_to_2048 is not None,
-            "moves_to_2048": moves_to_2048 if moves_to_2048 is not None else "",
-        })
+        }
+
+        for tile in TILE_MILESTONES:
+            row[f"reached_{tile}"] = moves_to_tile[tile] is not None
+            row[f"moves_to_{tile}"] = (
+                moves_to_tile[tile] if moves_to_tile[tile] is not None else ""
+            )
+
+        # Keep the original 2048 fields for continuity with previous result files.
+        row["reached_2048"] = moves_to_tile[2048] is not None
+        row["moves_to_2048"] = (
+            moves_to_tile[2048] if moves_to_tile[2048] is not None else ""
+        )
+        episode_results.append(row)
 
     # Save per-episode results for later analysis.
-    fieldnames = [
-        "episode",
-        "total_reward",
-        "moves",
-        "max_tile",
-        "reached_2048",
-        "moves_to_2048",
-    ]
+    fieldnames = ["episode", "total_reward", "moves", "ineffective_moves", "max_tile"]
+    for tile in TILE_MILESTONES:
+        fieldnames.extend([f"reached_{tile}", f"moves_to_{tile}"])
+    fieldnames.extend(["reached_2048", "moves_to_2048"])
+
     with RESULTS_FILE.open("w", newline="", encoding="utf-8") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
@@ -70,13 +86,6 @@ def main():
     rewards = [row["total_reward"] for row in episode_results]
     max_tiles = [row["max_tile"] for row in episode_results]
     episode_lengths = [row["moves"] for row in episode_results]
-    successful_episodes = [
-        row for row in episode_results if row["reached_2048"]
-    ]
-    successful_moves = [row["moves_to_2048"] for row in successful_episodes]
-
-    success_rate = len(successful_episodes) / N_EPISODES * 100
-    avg_moves_to_2048 = mean(successful_moves) if successful_moves else None
 
     print("Agent: RandomAgent")
     print(f"Episodes: {N_EPISODES}")
@@ -85,14 +94,34 @@ def main():
     print()
     print("Evaluation metrics:")
     print(f"1. Average Total Reward: {mean(rewards):.2f}")
-    print(f"2. 2048 Success Rate: {success_rate:.2f}%")
-    print(f"3. Average Maximum Tile: {mean(max_tiles):.2f}")
-    if avg_moves_to_2048 is None:
-        print("4. Average Moves to 2048: N/A (no successful episodes)")
-    else:
-        print(f"4. Average Moves to 2048: {avg_moves_to_2048:.2f}")
-    print(f"5. Average Episode Length: {mean(episode_lengths):.2f}")
+    print(f"2. Average Maximum Tile: {mean(max_tiles):.2f}")
 
+    print("3. Tile Reach Rates:")
+    for tile in TILE_MILESTONES:
+        count = sum(row["max_tile"] >= tile for row in episode_results)
+        rate = count / N_EPISODES * 100
+        print(f"   - Reached >= {tile}: {rate:.2f}% ({count}/{N_EPISODES} episodes)")
+
+    print("4. Average Moves to Tile (successful episodes only):")
+    for tile in (*TILE_MILESTONES[2:], 2048):  # 256, 512, and 2048
+        successful_moves = [
+            row[f"moves_to_{tile}"]
+            for row in episode_results
+            if row[f"moves_to_{tile}"] != ""
+        ]
+        if successful_moves:
+            print(f"   - Moves to {tile}: {mean(successful_moves):.2f}")
+        else:
+            print(f"   - Moves to {tile}: N/A (no episodes reached this tile)")
+
+    print(f"5. Average Episode Length: {mean(episode_lengths):.2f}")
+    total_ineffective_moves = sum(
+        row["ineffective_moves"] for row in episode_results
+    )
+    total_moves = sum(episode_lengths)
+
+    ineffective_move_rate = total_ineffective_moves / total_moves * 100
+    print(f"6. Ineffective Move Rate: {ineffective_move_rate:.2f}%")
 
 if __name__ == "__main__":
     main()

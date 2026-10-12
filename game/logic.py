@@ -5,10 +5,10 @@ board_size = 4
 # np.random.seed(0)  # Optional: for reproducibility
 
 
-def initialise_grid():
+def initialise_grid(rng):
     grid = np.zeros((board_size, board_size), dtype=int)
 
-    positions = np.random.choice(
+    positions = rng.choice(
         board_size * board_size,
         size=2,
         replace=False
@@ -20,14 +20,14 @@ def initialise_grid():
 
     return grid
 
-def spawn_tile(grid):
+def spawn_tile(grid, rng):
     empty_pos = np.argwhere(grid == 0)
 
     if empty_pos.size == 0:
         return
 
-    new_pos = empty_pos[np.random.choice(empty_pos.shape[0])]
-    k = np.random.choice([2, 4], p=[0.9, 0.1])
+    new_pos = empty_pos[rng.choice(empty_pos.shape[0])]
+    k = rng.choice([2, 4], p=[0.9, 0.1])
     grid[new_pos[0], new_pos[1]] = k
 
 def process_line(line, direction):
@@ -115,7 +115,8 @@ def is_game_over(grid):
     return True
 
 def main():
-    grid = initialise_grid()
+    rng = np.random.default_rng()
+    grid = initialise_grid(rng)
     print(grid)
     global_score = 0
 
@@ -130,8 +131,8 @@ def main():
 
             # Only spawn if the move actually changed the board
             if not np.array_equal(before, grid):
-                spawn_tile(grid)
-
+                spawn_tile(grid, rng)
+                
             print(grid)
             print("Score:", global_score)
 
