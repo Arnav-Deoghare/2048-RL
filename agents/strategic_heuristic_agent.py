@@ -41,11 +41,16 @@ class StrategicHeuristicAgent:
 
         w_e = 1.0
         w_m = 1.0
-
+        w_s = 1.0
+        w_c = 100.0
+        
         empty_cells = self.count_empty(grid)
         mono_score = self.monotonicity(grid)
+        smooth_score = self.smoothness(grid)
 
-        board_score = w_e*empty_cells - w_m*mono_score
+        corner_score = self.check_corners(grid)
+
+        board_score = (w_e*empty_cells - w_m*mono_score - w_s*smooth_score + w_c*corner_score)
         return board_score
 
     def count_empty(self, grid):
@@ -77,3 +82,30 @@ class StrategicHeuristicAgent:
             score += column_penalty
 
         return score
+    
+    def smoothness(self, grid):
+        score = 0
+        grid = np.log2(grid, where=(grid > 0), out=np.zeros_like(grid, dtype=float))
+
+        left = grid[:, :-1]
+        right = grid[:, 1:]
+        mask = (left!=0) &(right!=0)
+        difference = np.abs(left-right) 
+        score += np.sum(difference[mask])
+
+        up = grid [:-1, : ]
+        down = grid[1:,:]
+        mask = (up!=0) & (down!=0)
+        difference = np.abs(up-down) 
+        score += np.sum(difference[mask])
+
+        return score
+
+    def check_corners(self, grid):
+        largest_tile = np.max(grid)
+
+        corners= [grid[0, 0]]
+
+        if largest_tile in corners:
+            return 1
+        return 0

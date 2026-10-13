@@ -6,21 +6,32 @@ import numpy as np
 
 from agents.Random_agent import RandomAgent
 from agents.greedy_reward_agent import GreedyRewardAgent
+from agents.strategic_heuristic_agent import StrategicHeuristicAgent
 from game.environment import Environment
 
 
 SEED = 42
-
+AGENT = "strategic_heuristic"
 N_EPISODES = 1000
-RESULTS_FILE = Path("results") / "random_agent_results.csv"
+RESULTS_FILE = Path("results") / f"{AGENT}_agent_results.csv"
 RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-TILE_MILESTONES = (64, 128, 256, 512)
+TILE_MILESTONES = (64, 128, 256, 512, 1024,2048)
+def create_agent(name, actions):
+    agents = {
+        "random": RandomAgent,
+        "greedy_reward": GreedyRewardAgent,
+        "strategic_heuristic": StrategicHeuristicAgent,
+    }
 
+    if name not in agents:
+        raise ValueError(f"Unknown agent '{name}'. Available agents: {list(agents.keys())}")
+
+    return agents[name](actions)
 
 def main():
     env = Environment(seed=SEED)
-    agent = RandomAgent(env.actions)
+    agent = create_agent(AGENT, env.actions)
     episode_results = []
 
     for episode in range(1, N_EPISODES + 1):
@@ -87,7 +98,7 @@ def main():
     max_tiles = [row["max_tile"] for row in episode_results]
     episode_lengths = [row["moves"] for row in episode_results]
 
-    print("Agent: RandomAgent")
+    print(f"Agent: {AGENT}")
     print(f"Episodes: {N_EPISODES}")
     print(f"Seed: {SEED}")
     print(f"Per-episode results saved to: {RESULTS_FILE.resolve()}")
@@ -103,7 +114,7 @@ def main():
         print(f"   - Reached >= {tile}: {rate:.2f}% ({count}/{N_EPISODES} episodes)")
 
     print("4. Average Moves to Tile (successful episodes only):")
-    for tile in (*TILE_MILESTONES[2:], 2048):  # 256, 512, and 2048
+    for tile in (TILE_MILESTONES[2:]):  # 256, 512, and 2048
         successful_moves = [
             row[f"moves_to_{tile}"]
             for row in episode_results

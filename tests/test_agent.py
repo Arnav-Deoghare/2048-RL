@@ -1,34 +1,39 @@
 import numpy as np
 
-from agents.greedy_reward_agent import GreedyRewardAgent
 from agents.strategic_heuristic_agent import StrategicHeuristicAgent
-from game.logic import move
 
 
 def main():
     agent = StrategicHeuristicAgent(["w", "a", "s", "d"])
 
     boards = [
+        # Board 1: Ordered tiles, largest tile in a corner
         np.array([
             [16, 8, 4, 2],
             [8, 4, 2, 0],
             [4, 2, 0, 0],
             [2, 0, 0, 0]
         ]),
+
+        # Board 2: Disorganized board
         np.array([
             [2, 16, 4, 8],
             [4, 2, 16, 0],
             [8, 4, 2, 0],
             [2, 0, 8, 4]
         ]),
+
+        # Board 3: Largest tile is not in a corner
         np.array([
+            [2, 128, 0, 0],
             [0, 0, 0, 0],
-            [0, 2, 0, 0],
-            [0, 0, 4, 0],
-            [0, 0, 0, 8]
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
         ]),
+
+        # Board 4: Simple row with empty cells
         np.array([
-            [2, 4, 8, 16],
+            [2, 4, 0, 0],
             [0, 0, 0, 0],
             [0, 0, 0, 0],
             [0, 0, 0, 0]
@@ -47,10 +52,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-if __name__ == "__main__":
-    # test_valid_action()
-    # test_highest_reward()
-    main()
-    print("All tests passed.")
