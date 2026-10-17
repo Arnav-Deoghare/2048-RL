@@ -25,12 +25,12 @@ class StrategicHeuristicAgent:
 
         for action in self.actions:
             next_grid, move_score = move(orig_grid.copy(), action)
-            grid_score = self.evaluate_board(next_grid)
+            
 
             changes_grid = not np.array_equal(orig_grid, next_grid)
             if not changes_grid:
                 continue
-
+            grid_score = self.evaluate_board(next_grid)
             if best_score is None or grid_score > best_score:
                 best_score = grid_score
                 best_action = action
