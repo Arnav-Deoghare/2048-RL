@@ -7,11 +7,12 @@ import numpy as np
 from agents.Random_agent import RandomAgent
 from agents.greedy_reward_agent import GreedyRewardAgent
 from agents.strategic_heuristic_agent import StrategicHeuristicAgent
+from agents.expectimax_agent import ExpectimaxAgent
 from game.environment import Environment
 
 
 SEED = 42
-AGENT = "strategic_heuristic"
+AGENT = "expectimax"
 N_EPISODES = 1000
 RESULTS_FILE = Path("results") / f"{AGENT}_agent_results.csv"
 RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -22,6 +23,7 @@ def create_agent(name, actions):
         "random": RandomAgent,
         "greedy_reward": GreedyRewardAgent,
         "strategic_heuristic": StrategicHeuristicAgent,
+        "expectimax": ExpectimaxAgent
     }
 
     if name not in agents:
